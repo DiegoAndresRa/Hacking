@@ -1,17 +1,24 @@
 #!/bin/bash
 #
 # Functions
-ip=$1
-domain=$2
-subdomains=$3
+ip="$1"
+domain="$2"
+subdomains="$3"
 
 mode="appened"
 mode_simbol="+"
 
 
 function append {
+	# domains
+	if [ -z $domain ];then
+		echo "Usage: $0 IP DOMAIN [subdomain[,subdomain]] [-d | -a]" >&2
+		exit 1
+	fi
+
 	echo -e "$ip\t$domain" | tee -a /etc/hosts > /dev/null 2>&1
-	if [ $# -eq 3 ];then
+	# subdomains
+	if [ -n $subdomains ];then
 		while read subdomain; do 
 			echo -e "$ip\t$subdomain.$domain" | tee -a /etc/hosts > /dev/null 2>&1 
 		done <<< $(echo "$subdomains" | tr ',' '\n')
@@ -26,7 +33,7 @@ function draw_modifications {
 	echo -e "\nSDL.TDL"
 	echo -e "\t[$mode_simbol] $ip\t$domain\n"
 	# Subdomains
-	if [ $# -eq 3 ];then
+	if [ -n $subdomains ];then
 		echo -e "\nSubdomains"
 		while read subdomain; do 
 			echo -e "\t[$mode_simbol] $ip\t$subdomain.$domain "
@@ -39,8 +46,9 @@ if [ $# -eq 0 ];then
 	exit 1
 fi
 # Main
-if [ $# -eq 4 ];then
-	option=$(echo $4 | tr -d '\-')
+echo $* | grep -o '\-.'
+if [ $(echo $?) -eq 0 ];then
+	option=$(echo $* | grep -o '\-.' | tr -d '\-')
 	case $option in
 		d)
 		mode="delete"
